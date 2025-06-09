@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>NoteBuddy - Record/Upload</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #e0e0e0;
+    }
+
+    .app-frame {
+      font-family: "Inter", sans-serif;
+      background-color: #f9f9f9;
+      color: #1d1d1f;
+      display: flex;
+      flex-direction: column;
+      height: 812px;
+      width: 375px;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .status-bar-placeholder {
+      height: 44px;
+      background-color: #f9f9f9;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .main-content {
+      padding-top: 44px;
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-bottom: 83px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding-left: 20px;
+      padding-right: 20px;
+      box-sizing: border-box;
+    }
+
+    .header {
+      padding: 0 16px;
+      height: 44px;
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 0.5px solid #c8c7cc;
+      position: absolute;
+      top: 44px;
+      width: 100%;
+      left: 0;
+      box-sizing: border-box;
+      z-index: 50;
+    }
+
+    .header .back-button {
+      color: #02a0d1;
+      text-decoration: none;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header .back-button svg {
+      width: 22px;
+      height: 22px;
+      margin-right: 2px;
+    }
+
+    .header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .action-button, .secondary-action-button {
+      border-radius: 20px;
+      padding: 18px 0;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .action-button {
+      background: linear-gradient(135deg, #02a0d1, #dc3dcc);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .secondary-action-button {
+      background-color: #e9e9eb;
+      color: #02a0d1;
+      font-weight: 500;
+    }
+
+    .action-button svg, .secondary-action-button svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .recording-indicator {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    .recording-indicator .mic-icon-large {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 15px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .recording-indicator p {
+      font-size: 16px;
+      color: #6c6c70;
+      margin-bottom: 20px;
+    }
+
+    .stop-button {
+      background-color: #ff3b30;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 15px 0;
+      font-size: 17px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 83px;
+      background-color: rgba(249, 249, 249, 0.94);
+      backdrop-filter: blur(10px);
+      border-top: 0.5px solid rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      box-sizing: border-box;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8e8e93;
+      font-size: 10px;
+      text-decoration: none;
+      flex-grow: 1;
+      padding: 4px 0;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #02a0d1;
+    }
+
+    .nav-item svg {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 2px;
+    }
+
+    .fab-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-grow: 1;
+      position: relative;
+    }
+
+    .fab {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #02a0d1, #dc3dcc);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-top: -20px;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fab svg {
+      width: 28px;
+      height: 28px;
+      z-index: 2;
+      position: relative;
+    }
+
+    .fab-icon {
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab.active-fab .fab-icon {
+  display: none;
+}
+
+    .fab.active-fab {
+      box-shadow: 0 0 0 3px white, 0 0 0 5px #02a0d1;
+    }
+
+    .wave-wrapper {
+      position: absolute;
+      bottom: 14px;
+      display: none;
+      gap: 3px;
+      align-items: flex-end;
+      z-index: 1;
+    }
+
+    .fab.active-fab .wave-wrapper {
+      display: flex;
+    }
+
+    .wave-bar {
+      width: 3px;
+      background-color: white;
+      border-radius: 2px;
+      animation: waveAnim 1.25s infinite ease-in-out;
+      animation-delay: calc(var(--i) * 0.1s);
+    }
+
+    @keyframes waveAnim {
+      0%, 100% { height: 4px; }
+      50% { height: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <div class="status-bar-placeholder"></div>
+    <div class="header">
+      <a href="notebuddy_prototype_home.html" class="back-button">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        Back
+      </a>
+      <h1>Record Audio</h1>
+      <div style="width: 60px;"></div>
+    </div>
+
+    <div class="main-content" id="initial-options-content">
+      <button class="action-button" id="start-recording-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+        </svg>
+        Start Recording
+      </button>
+
+      <button class="secondary-action-button" id="upload-trigger">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+        Upload Audio File
+      </button>
+      <input type="file" id="audio-input" accept=".mp3, .m4a" style="display: none;" />
+
+<!-- Upload Preview -->
+      <div id="upload-preview" style="display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+      <p id="file-name" style="font-size: 14px; color: #1d1d1f;"></p>
+      <button class="action-button" id="submit-audio-btn">Submit Audio</button>
+      </div>
+
+<!-- Upload Success -->
+      <div id="upload-success" style="display: none; margin-top: 20px; color: #34c759; font-weight: 600;">
+      Audio successfully uploaded
+
+      <div class="recording-indicator" id="recording-state-indicator">
+        <svg class="mic-icon-large" viewBox="0 0 24 24" fill="#02a0d1"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+        <p>Recording in progress...</p>
+        <button class="stop-button" id="stop-recording-btn">Stop Recording</button>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="notebuddy_prototype_home.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Home
+      </a>
+      <a href="notebuddy_prototype_calendar_view.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        Calendar
+      </a>
+      <div class="fab-container">
+        <button class="fab" id="fabBtn" aria-label="Record or Upload">
+          <div class="wave-wrapper">
+            <div class="wave-bar" style="--i:0;"></div>
+            <div class="wave-bar" style="--i:1;"></div>
+            <div class="wave-bar" style="--i:2;"></div>
+            <div class="wave-bar" style="--i:3;"></div>
+            <div class="wave-bar" style="--i:4;"></div>
+          </div>
+          <span class="fab-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+      <a href="notebuddy_prototype_summary_view.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        Summaries
+      </a>
+      <a href="notebuddy_prototype_task_list.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+        Tasks
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    const startRecordingBtn = document.getElementById("start-recording-btn");
+    const stopRecordingBtn = document.getElementById("stop-recording-btn");
+    const initialOptionsContent = document.getElementById("initial-options-content");
+    const recordingStateIndicator = document.getElementById("recording-state-indicator");
+    const actionButtons = initialOptionsContent.querySelectorAll(".action-button, .secondary-action-button");
+    const fab = document.getElementById("fabBtn");
+
+    startRecordingBtn.addEventListener("click", () => {
+      actionButtons.forEach(btn => btn.style.display = "none");
+      recordingStateIndicator.style.display = "flex";
+      fab.classList.add("active-fab");
+    });
+
+    stopRecordingBtn.addEventListener("click", () => {
+      recordingStateIndicator.style.display = "none";
+      actionButtons.forEach(btn => btn.style.display = "flex");
+      fab.classList.remove("active-fab");
+      setTimeout(() => {
+        window.location.href = "notebuddy_prototype_summary_view.html";
+      }, 500);
+    });
+
+    document.querySelectorAll(".nav-item, .fab, .back-button").forEach(item => {
+      item.addEventListener("touchstart", function () {});
+    });
+
+    const fileInput = document.getElementById("audio-input");
+    const uploadBtn = document.getElementById("upload-trigger");
+    const preview = document.getElementById("upload-preview");
+    const fileNameDisplay = document.getElementById("file-name");
+    const submitBtn = document.getElementById("submit-audio-btn");
+    const successMsg = document.getElementById("upload-success");
+
+    uploadBtn.addEventListener("click", () => {
+  fileInput.click();
+    });
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+  const validTypes = ['audio/mp3', 'audio/mpeg', 'audio/x-m4a', 'audio/m4a'];
+    if (!validTypes.includes(file.type)) {
+      alert("Invalid file type. Please upload an MP3 or M4A file.");
+      fileInput.value = "";
+    return;
+  }
+
+  fileNameDisplay.textContent = `Selected file: ${file.name}`;
+  preview.style.display = "flex";
+  successMsg.style.display = "none";
+  });
+
+submitBtn.addEventListener("click", () => {
+  preview.style.display = "none";
+  successMsg.style.display = "block";
+
+  // MOCK: Simulate a backend request
+  console.log("Uploading mock audio file:", fileInput.files[0]);
+  
+  setTimeout(() => {
+    // In a real flow, you’d trigger server API request here
+    // and then handle redirect/feedback
+  }, 1000);
+  });
+
+  </script>
+</body>
+</html>
